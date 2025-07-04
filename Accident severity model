@@ -1,0 +1,66 @@
+# accident_severity_model.py
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import joblib
+
+# 1. Simulate the dataset
+data = {
+    'Weather_Condition': np.random.randint(0, 3, 100),
+    'Road_Surface': np.random.randint(0, 3, 100),
+    'Vehicle_Age': np.random.randint(1, 15, 100),
+    'Speed': np.random.randint(30, 120, 100),
+}
+
+df = pd.DataFrame(data)
+
+# Generate a target variable with some noise
+df['Accident_Severity'] = (
+    0.5 * df['Weather_Condition'] +
+    0.7 * df['Road_Surface'] +
+    0.2 * df['Vehicle_Age'] +
+    0.1 * df['Speed'] +
+    np.random.normal(0, 1, 100)
+)
+
+# 2. Features and target
+X = df[['Weather_Condition', 'Road_Surface', 'Vehicle_Age', 'Speed']]
+y = df['Accident_Severity']
+
+# 3. Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 4. Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# 5. Evaluate model
+y_pred = model.predict(X_test)
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R2 Score:", r2_score(y_test, y_pred))
+
+# 6. Save model
+joblib.dump(model, "accident_severity_model.pkl")
+
+# 7. Predict using a hypothetical example
+# Example: Rainy (1), Wet (1), 5 years old vehicle, 70 km/h
+sample_input = np.array([[1, 1, 5, 70]])
+prediction = model.predict(sample_input)
+print("\nHypothetical Prediction:")
+print("Input: Weather=Rainy(1), Surface=Wet(1), Vehicle_Age=5, Speed=70")
+print("Predicted Severity:", round(prediction[0], 2))
+
+# 8. Visualize data
+sns.pairplot(df)
+plt.suptitle("Pairplot of Simulated Accident Dataset", y=1.02)
+plt.show()
+
+# 9. Print model coefficients
+print("\nModel Coefficients:")
+for name, coef in zip(X.columns, model.coef_):
+    print(f"{name}: {coef:.2f}")
